@@ -1,27 +1,33 @@
 package com.yicheng.netty;
 
 
-import io.netty.buffer.ByteBuf;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.yicheng.guice.MyModule;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.SimpleChannelInboundHandler;
+
+import java.lang.reflect.Method;
 
 /**
  * Created by yuer on 2017/1/3.
  */
-public class ServiceHandler extends ChannelInboundHandlerAdapter {
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        ByteBuf byteBuf = (ByteBuf) msg;
+public class ServiceHandler extends SimpleChannelInboundHandler<RpcRequest> {
 
-    }
+    private Injector injector = Guice.createInjector(new MyModule());
 
     @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        super.channelReadComplete(ctx);
-    }
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, RpcRequest rpcRequest) throws Exception {
+        RpcResponse response = new RpcResponse();
+        response.setRequestId(rpcRequest.getRequestId());
+        String className = rpcRequest.getClassName();
+        Class<?>[] parameterTypes = rpcRequest.getParameterTypes();
+        Object[] parameters = rpcRequest.getParameters();
+        Class<?> serviceClass = injector.getInstance(Class.forName(className)).getClass();
+        String methodName = rpcRequest.getMethodName();
+        Method method = serviceClass.getMethod(methodName, parameterTypes);
+        response.setResult(method.invoke(serviceClass,parameters));
+        channelHandlerContext.writeAndFlush(response);
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause);
     }
 }

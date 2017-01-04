@@ -6,4 +6,6 @@ package com.yicheng.guice;
 public interface BillingService {
 
     void chargeOrder();
+
+    String sayHello(String name);
 }
