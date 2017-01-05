@@ -1,17 +1,16 @@
-package com.yicheng.netty;
-
+package com.yicheng.rpc;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
+
+import java.io.Serializable;
 
 /**
- * Created by yuer on 2017/1/4.
+ * Created by yuer on 2017/1/5.
  */
 @Getter
 @Setter
-@ToString
-public class RpcRequest {
+public class RpcRequest implements Serializable {
     private String requestId;
     private String className;
     private String methodName;
