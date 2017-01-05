@@ -14,8 +14,6 @@ import java.lang.reflect.Method;
  */
 public class ServiceHandler extends SimpleChannelInboundHandler<RpcRequest> {
 
-    private Injector injector = Guice.createInjector(new MyModule());
-
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, RpcRequest rpcRequest) throws Exception {
         RpcResponse response = new RpcResponse();
@@ -23,11 +21,6 @@ public class ServiceHandler extends SimpleChannelInboundHandler<RpcRequest> {
         String className = rpcRequest.getClassName();
         Class<?>[] parameterTypes = rpcRequest.getParameterTypes();
         Object[] parameters = rpcRequest.getParameters();
-        Class<?> serviceClass = injector.getInstance(Class.forName(className)).getClass();
-        String methodName = rpcRequest.getMethodName();
-        Method method = serviceClass.getMethod(methodName, parameterTypes);
-        response.setResult(method.invoke(serviceClass,parameters));
-        channelHandlerContext.writeAndFlush(response);
 
     }
 }
