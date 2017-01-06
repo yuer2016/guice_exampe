@@ -1,5 +1,6 @@
 package com.yicheng.rpc.codec;
 
+import com.yicheng.rpc.RpcFutureUtil;
 import com.yicheng.rpc.RpcResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -13,11 +14,14 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class ConnectorHandler extends SimpleChannelInboundHandler<RpcResponse>{
 
-    private RpcResponse response;
+    private RpcFutureUtil futureUtil;
+
+    public ConnectorHandler(RpcFutureUtil futureUtil) {
+        this.futureUtil = futureUtil;
+    }
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, RpcResponse rpcResponse) throws Exception {
-        response = rpcResponse;
-        System.out.println(rpcResponse.getResult().toString());
+        futureUtil.notifyRpcMessage(rpcResponse);
     }
 
 

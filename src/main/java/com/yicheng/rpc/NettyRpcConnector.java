@@ -15,6 +15,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by yuer on 2017/1/5.
@@ -25,11 +26,10 @@ public class NettyRpcConnector implements RpcConnector {
     private int prot;
     private Channel channel;
     private EventLoopGroup eventLoopGroup;
-    private ConnectorHandler handler;
+    private RpcFutureUtil futureUtil = new RpcFutureUtil();
     @SneakyThrows
     private void init() {
         eventLoopGroup = new NioEventLoopGroup();
-        handler = new ConnectorHandler();
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(eventLoopGroup)
                 .channel(NioSocketChannel.class)
@@ -39,7 +39,7 @@ public class NettyRpcConnector implements RpcConnector {
                         socketChannel.pipeline().addLast(
                                 new RpcEncoder(),
                                 new RpcDecode(RpcResponse.class),
-                                handler
+                                new ConnectorHandler(futureUtil)
                         );
                     }
                 });
@@ -49,9 +49,13 @@ public class NettyRpcConnector implements RpcConnector {
 
     @SneakyThrows
     @Override
-    public RpcResponse invoke(RpcRequest requst) throws IOException {
-        channel.writeAndFlush(requst);
-        return handler.getResponse();
+    public RpcResponse invoke(RpcRequest request) throws IOException {
+        String mid = request.getRequestId();
+        RpcFuture<Object> future = new RpcFuture<>();
+        futureUtil.setRpcFuture(mid, future);
+        channel.writeAndFlush(request);
+        future.await(100, TimeUnit.MILLISECONDS);
+        return future.getResponse();
     }
 
     @Override
