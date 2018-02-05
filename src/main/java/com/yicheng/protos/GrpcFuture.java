@@ -1,4 +1,6 @@
-package com.yicheng.rpc;
+package com.yicheng.protos;
+
+import com.yicheng.rpc.RpcResponse;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -7,16 +9,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Created by yuer on 2017/1/6.
+ * Created by yuer on 2017/12/6.
  */
-public class RpcFuture<V> implements Future<V> {
+public class GrpcFuture<V> implements Future<V> {
     private volatile RpcResponse response;
     private volatile Exception exception;
     private volatile boolean done;
     private volatile int waiters;
-    private volatile Callback callback;
 
-    boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+    private boolean await(long timeout, TimeUnit unit) throws InterruptedException {
         long millis = unit.toMillis(timeout);
         long endTime = System.currentTimeMillis() + millis;
         synchronized (this) {
@@ -27,7 +28,7 @@ public class RpcFuture<V> implements Future<V> {
                 while (!done) {
                     wait(millis);
                     if (endTime < System.currentTimeMillis() && !done) {
-                        exception = new TimeoutException("time out");
+                        exception = new TimeoutException("request time out");
                         break;
                     }
                 }
@@ -38,46 +39,53 @@ public class RpcFuture<V> implements Future<V> {
         return done;
     }
 
+
     Exception getException() {
         return exception;
     }
 
     RpcResponse getResponse() throws IOException, TimeoutException {
-        Exception e = getException();
-        if (e != null) {
-            if (e instanceof IOException) throw (IOException) e;
-            if (e instanceof TimeoutException) throw (TimeoutException) e;
-
+        Exception error = getException();
+        if (error != null) {
+            if (error instanceof IOException) {
+                throw (IOException) error;
+            }else if (error instanceof TimeoutException) {
+                throw (TimeoutException) error;
+            }
         }
         return response;
     }
 
     void setException(Exception exception) {
         synchronized (this) {
-            if (done) return;
-            this.exception = exception;
-            done = true;
-            if (waiters > 0) {
-                notifyAll();
+            if (!done) {
+                this.exception = exception;
+                done = true;
+                if (waiters > 0) {
+                    notifyAll();
+                }
             }
+
         }
     }
 
     void setResponse(RpcResponse response) {
         synchronized (this) {
-            if (done) return;
-            this.response = response;
-            done = true;
-            if (waiters > 0) {
-                notifyAll();
+            if (!done) {
+                this.response = response;
+                done = true;
+                if (waiters > 0) {
+                    notifyAll();
+                }
             }
+
         }
     }
 
     @Override
     public V get() throws InterruptedException, ExecutionException {
         try {
-            return get(Long.MAX_VALUE, TimeUnit.DAYS);
+            return get(Long.MAX_VALUE, TimeUnit.MINUTES);
         } catch (TimeoutException e) {
             throw new InterruptedException(e.getMessage());
         }
@@ -107,14 +115,8 @@ public class RpcFuture<V> implements Future<V> {
 
     @Override
     public boolean isDone() {
-        return done;
+        return false;
     }
 
-    Callback getCallback() {
-        return callback;
-    }
 
-    void setCallback(Callback callback) {
-        this.callback = callback;
-    }
 }

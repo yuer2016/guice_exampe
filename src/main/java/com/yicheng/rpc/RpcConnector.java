@@ -8,7 +8,7 @@ import java.io.IOException;
 public interface RpcConnector {
     RpcResponse invoke(RpcRequest requst) throws IOException;
     void setHost(String host);
-    void setport(int port);
+    void setPort(int port);
     void start() throws IOException ;
     void stop() throws IOException ;
 }

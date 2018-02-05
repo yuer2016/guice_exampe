@@ -1,10 +1,8 @@
 package com.yicheng.rpc;
 
+
 import com.yicheng.guice.BillingService;
 import com.yicheng.guice.RealBillingService;
-import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by yuer on 2017/1/5.

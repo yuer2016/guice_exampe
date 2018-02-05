@@ -1,0 +1,91 @@
+syntax = "proto3";
+package com.yicheng.protos;
+//学员基本信息
+message DriveStudent {
+    string studentNum = 1; //学员编号
+    string driveType = 2; //学驾类型
+    int32 subject2TotalAmt = 3; //科目二总学时
+    int32 subject2Amt = 4; //科目二已完成学时
+    int32 subject3TotalAmt = 5; //科目三总学时
+    int32 subject3Amt = 6; //科目三已完成学时
+    int32 totalMileage = 7; //总里程
+    int32 s3mileage = 8; //已学里程
+}
+
+//教练基本信息
+message DriveCoach {
+    string coachNum = 1; //教练员编号
+    string teachCarType = 2; //教练员准教车类型
+}
+
+//车辆基本信息
+message VehicleInfo {
+    int32 vehicleId = 1; //车辆主键id
+    int32 kindID = 2; //车型
+    string simCardNo = 3; //设备编号
+}
+
+//设备基本信息
+message DeviceInfo {
+    string serviceId = 1; //(必填)数据库中业务系统ID。
+    int32 deviceType = 2; //(必填)设备类型。设备类型决定对应的设备信息字段的内容。
+    string deviceId = 3; //(必填)设备ID。格式由对应类型设备自行定义, 设备类型和设备ID组成设备的全局唯一标识
+    oneof ext { //终端扩展信息
+                JttDeviceExt jttDeviceExt = 4; //驾培终端基础信息
+    }
+}
+
+//驾培终端扩展信息
+message JttDeviceExt {
+    string platformNumber = 1; //平台编号
+    string trainInstitutionNumber = 2; //培训机构编号
+    string timingSequence = 3; //计时终端编号
+    string certificate = 4; //证书口令
+    string terminalCertificate = 5; //终端证书
+}
+
+//车辆位置信息
+message DataLocation {
+    double longitude = 1; // 纬度
+    double latitude = 2; // 经度
+    double speed = 3; // 行驶记录速度
+    double satelliteSpeed = 4; //卫星定位速度
+    int32 direction = 5; //方向
+    int64 time = 6; //时间
+}
+//grpc 请求返回状态码
+enum ResponseCode{
+    ERROR = 0;   //失败
+    SUCCESS = 1; //成功
+}
+//grpc 请求返回消息体
+message Respone{
+    ResponseCode code = 1; //状态码
+    oneof body{ //grpc 返回消息体
+                string message = 2; //普通消息
+                DataLocation location = 3; //位置信息
+    }
+}
+//grpc请求基类
+message BaseRequest{
+    string serviceId = 1; //(必填)数据库中业务系统ID。
+    int32  deviceType = 2; //(必填)设备类型。设备类型决定对应的设备信息字段的内容。
+    string deviceId = 3; //(必填)设备ID。格式由对应类型设备自行定义, 设备类型和设备ID组成设备的全局唯一标识
+}
+//查询历史轨迹信息
+message QueryVehicleTrack{
+    BaseRequest baseRequest =1;
+    int64 startTime = 2; //开始时间
+    int64 endTime = 3; //结束时间
+}
+
+service JttRequest{
+
+    rpc importDeviceInfo(DeviceInfo) returns (Respone){} //注册终端接口
+
+    rpc subVehicleLocation(BaseRequest) returns (stream Respone){} //订阅轨迹接口
+
+    rpc unSubVehicleLocation(BaseRequest) returns (Respone){} //取消订阅轨迹接口
+
+    rpc queryVehicleTark(QueryVehicleTrack) returns(stream Respone){} //历史轨迹查询
+}

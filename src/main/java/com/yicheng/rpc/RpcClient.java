@@ -12,7 +12,7 @@ public class RpcClient {
     public RpcClient(String host,int port) {
         connector = new NettyRpcConnector();
         connector.setHost(host);
-        connector.setport(port);
+        connector.setPort(port);
         proxy = new RpcProxy();
         proxy.setConnector(connector);
         connector.start();

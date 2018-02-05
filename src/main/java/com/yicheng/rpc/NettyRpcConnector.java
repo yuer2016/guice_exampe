@@ -64,7 +64,7 @@ public class NettyRpcConnector implements RpcConnector {
     }
 
     @Override
-    public void setport(int port) {
+    public void setPort(int port) {
         this.prot = port;
     }
 

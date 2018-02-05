@@ -1,0 +1,57 @@
+grammar Json;
+
+json
+   : value
+   ;
+
+obj
+   : '{' pair (',' pair)* '}' # AnObject
+   | '{' '}'  # EmptyObject
+   ;
+
+pair
+   : STRING ':' value
+   ;
+
+array
+   : '[' value (',' value)* ']' # ArrayOfValues
+   | '[' ']' # EmptyArray
+   ;
+
+value
+   : STRING  # String
+   | NUMBER  # Atom
+   | obj     # ObjectValue
+   | array   # ArrayValue
+   | 'true'  # Atom
+   | 'false' # Atom
+   | 'null'  # Atom
+   ;
+
+
+STRING
+   : '"' (ESC | ~ ["\\])* '"'
+   ;
+fragment ESC
+   : '\\' (["\\/bfnrt] | UNICODE)
+   ;
+fragment UNICODE
+   : 'u' HEX HEX HEX HEX
+   ;
+fragment HEX
+   : [0-9a-fA-F]
+   ;
+NUMBER
+   : '-'? INT ('.' [0-9] +)? EXP?
+   ;
+fragment INT
+   : '0' | [1-9] [0-9]*
+   ;
+// no leading zeros
+fragment EXP
+   : [Ee] [+\-]? INT
+   ;
+// \- since - means "range" inside [...]
+WS
+   : [ \t\n\r] + -> skip
+   ;
